@@ -1,0 +1,12 @@
+{
+  "name": "midnight_run",
+  "version": "1.0.0",
+  "description": "A run for your life javascript experiment",
+  "main": "app.js",
+  "scripts": {},
+  "author": "Florian Mounier <paradoxxx.zero@gmail.com> (http://paradoxxxzero.github.io/)",
+  "license": "GPLv3",
+  "dependencies": {
+    "express": "^4.13.3"
+  }
+}

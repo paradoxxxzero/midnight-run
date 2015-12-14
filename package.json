@@ -4,7 +4,8 @@
   "description": "A run for your life javascript experiment",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon ./bin/www"
+    "start": "nodemon ./bin/www",
+    "test": "node-debug ./bin/www"
   },
   "author": "Florian Mounier <paradoxxx.zero@gmail.com> (http://paradoxxxzero.github.io/)",
   "license": "GPL-3.0",
@@ -18,6 +19,6 @@
     "morgan": "~1.6.1",
     "node-sass-middleware": "^0.9.7",
     "serve-favicon": "~2.3.0",
-    "ws": "^0.8.1"
+    "socket.io": "^1.3.7"
   }
 }

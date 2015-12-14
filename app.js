@@ -38,7 +38,7 @@ app.use(babelMiddleware({
   options: {
   },
   src: "es",
-  dest: "public/javascripts"
+  dest: "public"
 }))
 
 app.use('/', routes)

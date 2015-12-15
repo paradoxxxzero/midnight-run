@@ -25,6 +25,7 @@ var io = require('socket.io')(server)
 
 socket.io = io
 io.on('connection', socket.connection)
+io.on('error', console.error.bind(console))
 
 /**
  * Listen on provided port, on all network interfaces.

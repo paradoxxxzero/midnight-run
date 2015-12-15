@@ -21,6 +21,10 @@ class Player {
     this.runner.style['border-color'] = color
     this.player.appendChild(this.runner)
     this.tracks.appendChild(this.player)
+    this.tracks.style.display = 'none'
+    this.name = name
+    setTimeout(() => this.tracks.style.display = 'flex', 10)
+
     this.position = position
   }
   ready() {
@@ -32,7 +36,7 @@ class Player {
 
   move(position) {
     this.position = Math.min(position, 100)
-    this.runner.style.left = this.position + '%'
+    this.runner.style['margin-top'] = this.position + 'vmin'
   }
 
   remove() {
@@ -43,9 +47,10 @@ class Player {
 document.addEventListener('DOMContentLoaded', () => {
   // Animate lauch
   setTimeout(() => document.body.classList.add('third-dimension'), 100)
-
-  var key_state = 'right'
+  var id = Math.random()
+  var key_state = ''
   var ready_state = 'unready'
+  var errors = 0
   addEventListener('keydown', (e) => {
     if (game_state == 'not started') {
       if (ready_state == 'ready') {
@@ -66,19 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
           ready_state = 'right'
         }
       }
-    } else {
+    } else if (game_state == 'started'){
       if(e.keyCode == 37) { // left
+        if (key_state == 'right') {
+          if (errors <= 0) {
+            socket.emit('step')
+          } else {
+            errors --
+          }
+          key_state = 'left'
+        } else {
+          if (key_state != '') {
+            errors ++
+            key_state = 'error'
+          } else {
+            key_state = 'left'
+          }
+        }
         key_state = 'left'
       } else if(e.keyCode == 39) { // right
         if (key_state == 'left') {
-          socket.emit('step')
+          if (errors <= 0) {
+            socket.emit('step')
+          } else {
+            errors --
+          }
+          key_state = 'right'
+        } else {
+          if (key_state != '') {
+            errors ++
+            key_state = 'error'
+          } else {
+            key_state = 'right'
+          }
         }
-        key_state = 'right'
-      } else {
-        key_state = 'error'
       }
     }
-    console.log(ready_state)
   })
   addEventListener('keyup', (e) => {
     if (game_state == 'not started') {
@@ -97,19 +125,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ready_state = 'unready'
       }
     }
-    console.log(ready_state)
   })
   // Init player
-  socket.on('new player', player => players[player.name] = new Player(player.name, player.color))
-  socket.on('del player', name => {
-    players[name].remove()
-    delete players[name]
+  socket.on('new player', player => players[player.id] = new Player(player.name, player.color))
+  socket.on('del player', id => {
+    players[id].remove()
+    delete players[id]
   })
-  socket.on('start', () => game_state = 'start')
-  socket.on('position', ({name, position}) => players[name].move(position))
-  socket.on('win', (name) => alert(name + ' won'))
+  socket.on('state', (state) => game_state = state)
+  socket.on('echo', (message) => document.querySelector('.echo').innerHTML = message)
+  socket.on('position', ({id, position}) => players[id].move(position))
   socket.on('disconnect', () => setTimeout(() => location.reload(true), 500))
-  socket.on('ready', name => players[name].ready())
-  socket.on('unready', name => players[name].unready())
-  socket.emit('add player', player_name)
+  socket.on('ready', id => players[id].ready())
+  socket.on('unready', id => players[id].unready())
+  socket.emit('add player', {id, name: player_name})
 })

@@ -17,6 +17,8 @@ if (!localStorage.getItem('midnigth_name')) {
 
 var Player = (function () {
   function Player(name, color) {
+    var _this = this;
+
     var position = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
 
     _classCallCheck(this, Player);
@@ -31,6 +33,12 @@ var Player = (function () {
     this.runner.style['border-color'] = color;
     this.player.appendChild(this.runner);
     this.tracks.appendChild(this.player);
+    this.tracks.style.display = 'none';
+    this.name = name;
+    setTimeout(function () {
+      return _this.tracks.style.display = 'flex';
+    }, 10);
+
     this.position = position;
   }
 
@@ -48,7 +56,7 @@ var Player = (function () {
     key: 'move',
     value: function move(position) {
       this.position = Math.min(position, 100);
-      this.runner.style.left = this.position + '%';
+      this.runner.style['margin-top'] = this.position + 'vmin';
     }
   }, {
     key: 'remove',
@@ -65,9 +73,10 @@ document.addEventListener('DOMContentLoaded', function () {
   setTimeout(function () {
     return document.body.classList.add('third-dimension');
   }, 100);
-
-  var key_state = 'right';
+  var id = Math.random();
+  var key_state = '';
   var ready_state = 'unready';
+  var errors = 0;
   addEventListener('keydown', function (e) {
     if (game_state == 'not started') {
       if (ready_state == 'ready') {
@@ -90,21 +99,44 @@ document.addEventListener('DOMContentLoaded', function () {
           ready_state = 'right';
         }
       }
-    } else {
+    } else if (game_state == 'started') {
       if (e.keyCode == 37) {
         // left
+        if (key_state == 'right') {
+          if (errors <= 0) {
+            socket.emit('step');
+          } else {
+            errors--;
+          }
+          key_state = 'left';
+        } else {
+          if (key_state != '') {
+            errors++;
+            key_state = 'error';
+          } else {
+            key_state = 'left';
+          }
+        }
         key_state = 'left';
       } else if (e.keyCode == 39) {
         // right
         if (key_state == 'left') {
-          socket.emit('step');
+          if (errors <= 0) {
+            socket.emit('step');
+          } else {
+            errors--;
+          }
+          key_state = 'right';
+        } else {
+          if (key_state != '') {
+            errors++;
+            key_state = 'error';
+          } else {
+            key_state = 'right';
+          }
         }
-        key_state = 'right';
-      } else {
-        key_state = 'error';
       }
     }
-    console.log(ready_state);
   });
   addEventListener('keyup', function (e) {
     if (game_state == 'not started') {
@@ -127,37 +159,36 @@ document.addEventListener('DOMContentLoaded', function () {
         ready_state = 'unready';
       }
     }
-    console.log(ready_state);
   });
   // Init player
   socket.on('new player', function (player) {
-    return players[player.name] = new Player(player.name, player.color);
+    return players[player.id] = new Player(player.name, player.color);
   });
-  socket.on('del player', function (name) {
-    players[name].remove();
-    delete players[name];
+  socket.on('del player', function (id) {
+    players[id].remove();
+    delete players[id];
   });
-  socket.on('start', function () {
-    return game_state = 'start';
+  socket.on('state', function (state) {
+    return game_state = state;
+  });
+  socket.on('echo', function (message) {
+    return document.querySelector('.echo').innerHTML = message;
   });
   socket.on('position', function (_ref) {
-    var name = _ref.name;
+    var id = _ref.id;
     var position = _ref.position;
-    return players[name].move(position);
-  });
-  socket.on('win', function (name) {
-    return alert(name + ' won');
+    return players[id].move(position);
   });
   socket.on('disconnect', function () {
     return setTimeout(function () {
       return location.reload(true);
     }, 500);
   });
-  socket.on('ready', function (name) {
-    return players[name].ready();
+  socket.on('ready', function (id) {
+    return players[id].ready();
   });
-  socket.on('unready', function (name) {
-    return players[name].unready();
+  socket.on('unready', function (id) {
+    return players[id].unready();
   });
-  socket.emit('add player', player_name);
+  socket.emit('add player', { id: id, name: player_name });
 });

@@ -7,59 +7,78 @@ var random_color = () => 'hsla(' + r(360) + ', 100%, 75%, 1)'
 
 socket.connection = s => {
   var sockets = socket.io.sockets
+  s.on('error', console.error.bind(console))
 
   console.log('Got connection')
-  s.on('add player', name => {
-    console.log('Got player', name)
+  s.on('add player', id_name => {
+    var id = id_name.id,
+    name = id_name.name
+    console.log('Got player', id, name)
+    // if (name in players) {
+    //   throw new Error(name + ' already exists')
+    // }
     /* Sending all previous player */
-    for (var player_name in players) {
-      console.log('Adding player ', player_name, ' for ', name)
-      var player = players[player_name]
+    for (var pid in players) {
+      console.log('Adding player ', pid, ' for ', name)
+      var player = players[pid]
 
-      s.emit('new player', {name: player_name, color: player.color})
+      s.emit('new player', player)
     }
 
-    players[name] = {socket: s, color: random_color(), position: 0, ready: false}
-    sockets.emit('new player', {name, color: players[name].color})
+    players[id] = {id, name, color: random_color(), position: 0, ready: false}
+    console.log('done')
+    sockets.emit('new player', players[id])
 
     s.on('step', () => {
-      players[name].position ++
-      sockets.emit('position', {name, position: players[name].position})
-      if (players[name].position >= 100) {
-        sockets.emit('win', name)
+      players[id].position += .5
+      sockets.emit('position', {id, position: players[id].position})
+      if (players[id].position >= 100) {
+        sockets.emit('state', 'end')
+        sockets.emit('echo', name + ' has won')
+        setTimeout(() => sockets.emit('disconnect'), 2000)
       }
     })
     s.on('ready', () => {
-      players[name].ready = true
-      sockets.emit('ready', name)
-      console.log(name, 'is ready')
-
-      if (Object.keys(players).length > 1) {
-        var everyone_ready = true
-        for (var player of players) {
-          if (!player.ready) {
-             everyone_ready = false
-             break
-          }
+      players[id].ready = true
+      sockets.emit('ready', id)
+      console.log(id, name, 'is ready')
+      var everyone_ready = true
+      for (var pid in players) {
+        if (!players[pid].ready) {
+          everyone_ready = false
+          break
         }
-        if (everyone_ready) {
-          console.log('everyone is ready')
-          sockets.emit('start')
-        }
+      }
+      if (everyone_ready) {
+        console.log('everyone is ready')
+        sockets.emit('state', 'starting')
+        sockets.emit('echo', '3')
+        setTimeout(() => {
+          sockets.emit('echo', '2')
+          setTimeout(() => {
+            sockets.emit('echo', '1')
+            setTimeout(() => {
+              sockets.emit('echo', 'Start')
+              setTimeout(() => {
+                sockets.emit('echo', '')
+                sockets.emit('state', 'started')
+              }, 1000)
+            }, 1000)
+          }, 1000)
+        }, 1000)
       }
     })
     s.on('unready', () => {
-      players[name].ready = false
-      sockets.emit('unready', name)
-      console.log(name, 'is not ready anymore')
+      players[id].ready = false
+      sockets.emit('unready', id)
+      console.log(id, name, 'is not ready anymore')
     })
 
     s.on('disconnect', () => {
-      console.log('Got disconnect for ', name)
-      sockets.emit('del player', name)
+      console.log('Got disconnect for ', id, name)
+      delete players[id]
+      sockets.emit('del player', id)
     })
-
-    s.on('error', console.log.bind(console))
   })
 }
 

@@ -11,16 +11,16 @@ if (!localStorage.getItem('midnigth_name')) {
 
 class Player {
   constructor(name, color, position=0) {
-    this.track = document.querySelector('.track')
+    this.tracks = document.querySelector('.tracks')
     this.player = document.createElement('div')
     this.player.setAttribute('data-name', name)
     this.player.classList.add('player')
-    this.runner = document.createElement('div')
+    this.runner = document.createElement('span')
     this.runner.classList.add('runner')
     this.runner.style['background-color'] = color
     this.runner.style['border-color'] = color
     this.player.appendChild(this.runner)
-    this.track.appendChild(this.player)
+    this.tracks.appendChild(this.player)
     this.position = position
   }
   ready() {
@@ -36,7 +36,7 @@ class Player {
   }
 
   remove() {
-    this.track.removeChild(this.player)
+    this.tracks.removeChild(this.player)
   }
 }
 

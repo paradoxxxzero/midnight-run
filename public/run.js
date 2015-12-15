@@ -21,7 +21,7 @@ var Player = (function () {
 
     _classCallCheck(this, Player);
 
-    this.track = document.querySelector('.track');
+    this.tracks = document.querySelector('.tracks');
     this.player = document.createElement('div');
     this.player.setAttribute('data-name', name);
     this.player.classList.add('player');
@@ -30,7 +30,7 @@ var Player = (function () {
     this.runner.style['background-color'] = color;
     this.runner.style['border-color'] = color;
     this.player.appendChild(this.runner);
-    this.track.appendChild(this.player);
+    this.tracks.appendChild(this.player);
     this.position = position;
   }
 
@@ -53,7 +53,7 @@ var Player = (function () {
   }, {
     key: 'remove',
     value: function remove() {
-      this.track.removeChild(this.player);
+      this.tracks.removeChild(this.player);
     }
   }]);
 

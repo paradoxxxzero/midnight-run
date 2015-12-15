@@ -2,11 +2,11 @@ $fg: white
 $bg: black
 
 html, body
-  margin: 0
+  margin: 0 auto
   padding: 0
   background: $bg
-  height: 100%
-  width: 100%
+  width: 75vmin
+  height: 100vmin
 
 body
   transition: perspective 1.5s
@@ -15,47 +15,40 @@ body
   align-items: center
   justify-content: center
 
-.ground
-  width: 100vmin
-  height: 25vmin
-  transition: transform 1s
-
-  .track
-    width: 100%
+  .tracks
     height: 100%
+    flex: 1
+    transition: transform 1s
     display: flex
-    flex-direction: column
+    flex-direction: row
     animation: 60s third-dimension-subtle infinite linear
     border: 4px solid $fg
     background: rgba(255, 255, 255, .1)
 
     .player
       position: relative
+      text-align: center
       flex: 1
-      border-bottom: 3px dashed $fg
+      border-right: 3px dashed $fg
       &:last-of-type
-        border-bottom: none
+        border-right: none
 
       &:before
         content: attr(data-name)
         display: block
         color: $fg
         text-align: right
-        position: relative
+        position: absolute
         vertical-align: middle
-        right: 100%
-        top: 50%
-        transform: rotate(25deg)
+        right: 50%
+        bottom: 100%
+        transform: rotate(75deg)
         transform-origin: right
 
       .runner
         transition: left 250ms
-        position: absolute
-        top: 50%
-        left: 0%
-        padding: 2%
-        margin-top: -2%
         border-radius: 100%
+        padding: 25%
 
       &:not(.ready)
         .runner
@@ -64,21 +57,20 @@ body
           border-style: solid
 
 
-
 body.third-dimension
   perspective: 33vmin
-  .ground
-    transform: scale(.9) rotateX(10deg)
+  .tracks
+    transform: scale(.9) rotateX(10deg) rotate(-90deg)
 
 
 @keyframes third-dimension-subtle
   0%
-    transform: rotateZ(0)
+    transform: scale(.9) rotateX(10deg) rotateZ(-90deg)
   25%
-    transform: rotateZ(10deg)
+    transform: scale(.9) rotateX(10deg) rotateZ(-100deg)
   50%
-    transform: rotateZ(0deg)
+    transform: scale(.9) rotateX(10deg) rotateZ(-90deg)
   75%
-    transform: rotateZ(-10deg)
+    transform: scale(.9) rotateX(10deg) rotateZ(-80deg)
   100%
-    transform: rotateZ(0)
+    transform: scale(.9) rotateX(10deg) rotateZ(-90deg)

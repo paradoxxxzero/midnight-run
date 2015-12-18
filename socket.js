@@ -4,29 +4,26 @@ var r = function r(i) {
   return Math.random() * i << 0
 }
 var random_color = () => 'hsla(' + r(360) + ', 100%, 75%, 1)'
+var state = 'not ready'
 
 socket.connection = s => {
   var sockets = socket.io.sockets
   s.on('error', console.error.bind(console))
 
-  console.log('Got connection')
   s.on('add player', id_name => {
     var id = id_name.id,
     name = id_name.name
-    console.log('Got player', id, name)
     // if (name in players) {
     //   throw new Error(name + ' already exists')
     // }
     /* Sending all previous player */
     for (var pid in players) {
-      console.log('Adding player ', pid, ' for ', name)
       var player = players[pid]
 
       s.emit('new player', player)
     }
 
     players[id] = {id, name, color: random_color(), position: 0, ready: false}
-    console.log('done')
     sockets.emit('new player', players[id])
 
     s.on('step', () => {
@@ -35,22 +32,26 @@ socket.connection = s => {
       if (players[id].position >= 100) {
         sockets.emit('state', 'end')
         sockets.emit('echo', name + ' has won')
+        state = 'not ready'
         setTimeout(() => sockets.emit('disconnect'), 2000)
       }
     })
     s.on('ready', () => {
+      if (state == 'ready') {
+        return
+      }
       players[id].ready = true
       sockets.emit('ready', id)
-      console.log(id, name, 'is ready')
-      var everyone_ready = true
+      var players_ready = 0
+      var all_players = 0
       for (var pid in players) {
-        if (!players[pid].ready) {
-          everyone_ready = false
-          break
+        all_players++
+        if (players[pid].ready) {
+          players_ready++
         }
       }
-      if (everyone_ready) {
-        console.log('everyone is ready')
+      if (players_ready >= (all_players / 2)) {
+        state = 'ready'
         sockets.emit('state', 'starting')
         sockets.emit('echo', '3')
         setTimeout(() => {
@@ -71,7 +72,6 @@ socket.connection = s => {
     s.on('unready', () => {
       players[id].ready = false
       sockets.emit('unready', id)
-      console.log(id, name, 'is not ready anymore')
     })
 
     s.on('disconnect', () => {
